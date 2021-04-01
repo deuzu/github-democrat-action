@@ -36,8 +36,12 @@ async function run(): Promise<void> {
         await octokit.pulls.merge({
           owner,
           repo,
+<<<<<<< HEAD
           pull_number: pullRequest.number,
           merge_method: 'squash'
+=======
+          pull_number: pullRequest.number
+>>>>>>> chore: 1st commit
         })
 
         core.info(`Pull Request #${pullRequest.number} merged.`)
