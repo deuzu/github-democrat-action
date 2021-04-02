@@ -60,13 +60,14 @@ function run() {
                     isPullRequestMature(pullRequest) &&
                     isPullRequestReadyToBeMerged(pullRequest);
                 if (pullRequestValid) {
-                    core.info(`Democracy has spoken. Pull Request #${pullRequest.id} has been voted for merge.`);
+                    core.info(`Democracy has spoken. Pull Request #${pullRequest.number} has been voted for merge.`);
                     yield octokit.pulls.merge({
                         owner,
                         repo,
-                        pull_number: pullRequest.id
+                        pull_number: pullRequest.number,
+                        merge_method: 'squash',
                     });
-                    core.info(`Pull Request #${pullRequest.id} merged.`);
+                    core.info(`Pull Request #${pullRequest.number} merged.`);
                 }
             }
             core.info('Democracy will be back.');

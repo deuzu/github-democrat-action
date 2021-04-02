@@ -37,7 +37,7 @@ async function run(): Promise<void> {
           owner,
           repo,
           pull_number: pullRequest.number,
-          merge_method: 'squash',
+          merge_method: 'squash'
         })
 
         core.info(`Pull Request #${pullRequest.number} merged.`)
