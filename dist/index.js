@@ -38,6 +38,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
+// interface PullRequest {
+//   number: number
+// }
 function run() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
@@ -54,19 +57,26 @@ function run() {
                 state: 'open'
             });
             for (const pullRequest of data) {
-                const pullRequestValid = isPullRequestMergeable(pullRequest) &&
-                    arePullRequestChecksOk(pullRequest) &&
-                    arePullRequestReviewsOk(pullRequest) &&
-                    isPullRequestMature(pullRequest) &&
-                    isPullRequestReadyToBeMerged(pullRequest);
+                const { data: pullRequestDetailsData } = octokit.rest.pulls.get({
+                    owner,
+                    repo,
+                    pull_number: pullRequest.number
+                });
+                core.debug(JSON.stringify(pullRequestDetailsData));
+                const pullRequestValid = true;
+                // isPullRequestMergeable(pullRequest) &&
+                // arePullRequestChecksOk(pullRequest) &&
+                // arePullRequestReviewsOk(pullRequest) &&
+                // isPullRequestMature(pullRequest) &&
+                // isPullRequestReadyToBeMerged(pullRequest)
                 if (pullRequestValid) {
                     core.info(`Democracy has spoken. Pull Request #${pullRequest.number} has been voted for merge.`);
-                    yield octokit.pulls.merge({
-                        owner,
-                        repo,
-                        pull_number: pullRequest.number,
-                        merge_method: 'squash',
-                    });
+                    // await octokit.pulls.merge({
+                    //   owner,
+                    //   repo,
+                    //   pull_number: pullRequest.number,
+                    //   merge_method: 'squash'
+                    // })
                     core.info(`Pull Request #${pullRequest.number} merged.`);
                 }
             }
@@ -77,26 +87,26 @@ function run() {
         }
     });
 }
-const isPullRequestMergeable = (pullRequest) => {
-    core.debug(JSON.stringify(pullRequest));
-    return true;
-};
-const arePullRequestChecksOk = (pullRequest) => {
-    core.debug(JSON.stringify(pullRequest));
-    return true;
-};
-const arePullRequestReviewsOk = (pullRequest) => {
-    core.debug(JSON.stringify(pullRequest));
-    return true;
-};
-const isPullRequestMature = (pullRequest) => {
-    core.debug(JSON.stringify(pullRequest));
-    return true;
-};
-const isPullRequestReadyToBeMerged = (pullRequest) => {
-    core.debug(JSON.stringify(pullRequest));
-    return true;
-};
+// const isPullRequestMergeable = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
+//   return true
+// }
+// const arePullRequestChecksOk = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
+//   return true
+// }
+// const arePullRequestReviewsOk = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
+//   return true
+// }
+// const isPullRequestMature = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
+//   return true
+// }
+// const isPullRequestReadyToBeMerged = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
+//   return true
+// }
 run();
 
 

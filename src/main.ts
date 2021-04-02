@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-interface PullRequest {
-  number: number
-}
+// interface PullRequest {
+//   number: number
+// }
 
 async function run(): Promise<void> {
   try {
@@ -23,20 +23,20 @@ async function run(): Promise<void> {
     })
 
     for (const pullRequest of data) {
-      const { data } = octokit.rest.pulls.get({
+      const { data: pullRequestDetailsData } = octokit.rest.pulls.get({
         owner,
         repo,
-        pull_number: pullRequest.number,
+        pull_number: pullRequest.number
       })
 
-      core.debug(JSON.stringify(data))
+      core.debug(JSON.stringify(pullRequestDetailsData))
 
       const pullRequestValid = true
-        // isPullRequestMergeable(pullRequest) &&
-        // arePullRequestChecksOk(pullRequest) &&
-        // arePullRequestReviewsOk(pullRequest) &&
-        // isPullRequestMature(pullRequest) &&
-        // isPullRequestReadyToBeMerged(pullRequest)
+      // isPullRequestMergeable(pullRequest) &&
+      // arePullRequestChecksOk(pullRequest) &&
+      // arePullRequestReviewsOk(pullRequest) &&
+      // isPullRequestMature(pullRequest) &&
+      // isPullRequestReadyToBeMerged(pullRequest)
 
       if (pullRequestValid) {
         core.info(`Democracy has spoken. Pull Request #${pullRequest.number} has been voted for merge.`)
