@@ -23,22 +23,30 @@ async function run(): Promise<void> {
     })
 
     for (const pullRequest of data) {
-      const pullRequestValid =
-        isPullRequestMergeable(pullRequest) &&
-        arePullRequestChecksOk(pullRequest) &&
-        arePullRequestReviewsOk(pullRequest) &&
-        isPullRequestMature(pullRequest) &&
-        isPullRequestReadyToBeMerged(pullRequest)
+      const { data } = octokit.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: pullRequest.number,
+      })
+
+      core.debug(JSON.stringify(data))
+
+      const pullRequestValid = true
+        // isPullRequestMergeable(pullRequest) &&
+        // arePullRequestChecksOk(pullRequest) &&
+        // arePullRequestReviewsOk(pullRequest) &&
+        // isPullRequestMature(pullRequest) &&
+        // isPullRequestReadyToBeMerged(pullRequest)
 
       if (pullRequestValid) {
         core.info(`Democracy has spoken. Pull Request #${pullRequest.number} has been voted for merge.`)
 
-        await octokit.pulls.merge({
-          owner,
-          repo,
-          pull_number: pullRequest.number,
-          merge_method: 'squash'
-        })
+        // await octokit.pulls.merge({
+        //   owner,
+        //   repo,
+        //   pull_number: pullRequest.number,
+        //   merge_method: 'squash'
+        // })
 
         core.info(`Pull Request #${pullRequest.number} merged.`)
       }
@@ -50,34 +58,34 @@ async function run(): Promise<void> {
   }
 }
 
-const isPullRequestMergeable = (pullRequest: PullRequest): boolean => {
-  core.debug(JSON.stringify(pullRequest))
+// const isPullRequestMergeable = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
 
-  return true
-}
+//   return true
+// }
 
-const arePullRequestChecksOk = (pullRequest: PullRequest): boolean => {
-  core.debug(JSON.stringify(pullRequest))
+// const arePullRequestChecksOk = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
 
-  return true
-}
+//   return true
+// }
 
-const arePullRequestReviewsOk = (pullRequest: PullRequest): boolean => {
-  core.debug(JSON.stringify(pullRequest))
+// const arePullRequestReviewsOk = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
 
-  return true
-}
+//   return true
+// }
 
-const isPullRequestMature = (pullRequest: PullRequest): boolean => {
-  core.debug(JSON.stringify(pullRequest))
+// const isPullRequestMature = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
 
-  return true
-}
+//   return true
+// }
 
-const isPullRequestReadyToBeMerged = (pullRequest: PullRequest): boolean => {
-  core.debug(JSON.stringify(pullRequest))
+// const isPullRequestReadyToBeMerged = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
 
-  return true
-}
+//   return true
+// }
 
 run()
