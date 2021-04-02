@@ -2,6 +2,113 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 209:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.enforceDemocracy = void 0;
+const core = __importStar(__webpack_require__(186));
+const github = __importStar(__webpack_require__(438));
+const enforceDemocracy = (token, owner, repo) => __awaiter(void 0, void 0, void 0, function* () {
+    core.info(`Implementing democracy on ${owner}/${repo}. Resistence is futile.`);
+    const octokit = github.getOctokit(token);
+    const { data } = yield octokit.pulls.list({
+        owner,
+        repo,
+        state: 'open'
+    });
+    for (const { number: pullRequestNumber } of data) {
+        const { data: pullRequestDetail } = yield octokit.pulls.get({
+            owner,
+            repo,
+            pull_number: pullRequestNumber
+        });
+        const { data: pullRequestReviewsDetail } = yield octokit.pulls.listReviews({
+            owner,
+            repo,
+            pull_number: pullRequestNumber
+        });
+        const pullRequest = {
+            number: pullRequestDetail.number,
+            mergeable: !!pullRequestDetail.mergeable,
+            updatedAt: new Date(pullRequestDetail.updated_at),
+            labels: pullRequestDetail.labels.map((label) => label.name),
+            base: pullRequestDetail.base.ref,
+            reviewScore: pullRequestReviewsDetail.reduce((accumulator, review) => {
+                if ('APPROVED' === review.state) {
+                    accumulator += 1;
+                }
+                if ('REQUEST_CHANGE' === review.state) {
+                    accumulator += -1;
+                }
+                return accumulator;
+            }, 0)
+        };
+        const pullRequestValid = isPullRequestMergeable(pullRequest) &&
+            isPullRequestBaseValid(pullRequest) &&
+            // && arePullRequestChecksOk(pullRequest)
+            arePullRequestReviewsOk(pullRequest) &&
+            isPullRequestReadyToBeMerged(pullRequest) &&
+            isPullRequestMature(pullRequest);
+        if (!pullRequestValid) {
+            core.info(`Pull Request does not fit contraints for merge`);
+            continue;
+        }
+        core.info(`Democracy has spoken. Pull Request #${pullRequest.number} has been voted for merge.`);
+        // await octokit.pulls.merge({
+        //   owner,
+        //   repo,
+        //   pull_number: pullRequest.number,
+        //   merge_method: 'squash'
+        // })
+        core.info(`Pull Request #${pullRequest.number} merged.`);
+    }
+    core.info('Democracy enforcer will be back.');
+});
+exports.enforceDemocracy = enforceDemocracy;
+const isPullRequestMergeable = (pullRequest) => pullRequest.mergeable;
+// const arePullRequestChecksOk = (pullRequest: PullRequest): boolean => {
+//   core.debug(JSON.stringify(pullRequest))
+//   return true
+// }
+const arePullRequestReviewsOk = (pullRequest) => pullRequest.reviewScore > 1;
+const isPullRequestMature = (pullRequest) => (+new Date() - pullRequest.updatedAt.getTime()) / (1000 * 60 * 60) > 24;
+const isPullRequestReadyToBeMerged = (pullRequest) => -1 !== pullRequest.labels.indexOf('ready');
+const isPullRequestBaseValid = (pullRequest) => 'main' === pullRequest.base;
+
+
+/***/ }),
+
 /***/ 109:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -38,75 +145,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
-// interface PullRequest {
-//   number: number
-// }
+const democrat_1 = __webpack_require__(209);
 function run() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.info(`Implementing democracy on org/repo. Resistence is futile.`);
             const token = core.getInput('github-token');
-            const octokit = github.getOctokit(token);
             const context = github.context;
-            const owner = ((_a = context.payload.repository) === null || _a === void 0 ? void 0 : _a.owner.name) || '';
-            const repo = ((_b = context.payload.repository) === null || _b === void 0 ? void 0 : _b.name) || '';
-            const { data } = yield octokit.pulls.list({
-                owner,
-                repo,
-                state: 'open'
-            });
-            for (const pullRequest of data) {
-                const { data: pullRequestDetailsData } = octokit.rest.pulls.get({
-                    owner,
-                    repo,
-                    pull_number: pullRequest.number
-                });
-                core.debug(JSON.stringify(pullRequestDetailsData));
-                const pullRequestValid = true;
-                // isPullRequestMergeable(pullRequest) &&
-                // arePullRequestChecksOk(pullRequest) &&
-                // arePullRequestReviewsOk(pullRequest) &&
-                // isPullRequestMature(pullRequest) &&
-                // isPullRequestReadyToBeMerged(pullRequest)
-                if (pullRequestValid) {
-                    core.info(`Democracy has spoken. Pull Request #${pullRequest.number} has been voted for merge.`);
-                    // await octokit.pulls.merge({
-                    //   owner,
-                    //   repo,
-                    //   pull_number: pullRequest.number,
-                    //   merge_method: 'squash'
-                    // })
-                    core.info(`Pull Request #${pullRequest.number} merged.`);
-                }
+            const owner = (_a = context.payload.repository) === null || _a === void 0 ? void 0 : _a.owner.name;
+            const repo = (_b = context.payload.repository) === null || _b === void 0 ? void 0 : _b.name;
+            if (!owner || !repo) {
+                throw new Error('`owner` and/or `repo` missing from Github context');
             }
-            core.info('Democracy will be back.');
+            democrat_1.enforceDemocracy(token, owner, repo);
         }
         catch (error) {
             core.setFailed(error.message);
         }
     });
 }
-// const isPullRequestMergeable = (pullRequest: PullRequest): boolean => {
-//   core.debug(JSON.stringify(pullRequest))
-//   return true
-// }
-// const arePullRequestChecksOk = (pullRequest: PullRequest): boolean => {
-//   core.debug(JSON.stringify(pullRequest))
-//   return true
-// }
-// const arePullRequestReviewsOk = (pullRequest: PullRequest): boolean => {
-//   core.debug(JSON.stringify(pullRequest))
-//   return true
-// }
-// const isPullRequestMature = (pullRequest: PullRequest): boolean => {
-//   core.debug(JSON.stringify(pullRequest))
-//   return true
-// }
-// const isPullRequestReadyToBeMerged = (pullRequest: PullRequest): boolean => {
-//   core.debug(JSON.stringify(pullRequest))
-//   return true
-// }
 run();
 
 
