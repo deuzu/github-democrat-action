@@ -1,11 +1,17 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: Democracy Enforcer
+description: Enforce democracy on a repository by merging pull requests by voting score.
+author: deuzu
+
+branding:
+  icon: alert-octagon
+  color: green
+
 inputs:
   github-token:
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    required: false
+    description: The Github token that give permission on the repository.
+    default: '${{ secret.GITHUB_TOKEN }}'
+
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  using: node12
+  main: dist/index.js

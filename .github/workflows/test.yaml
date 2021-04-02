@@ -6,18 +6,13 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          npm install
-      - run: |
-          npm run all
-  # test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./
-  #       with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm install
+      - run: npm run format-check
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+      - run: npm run package
