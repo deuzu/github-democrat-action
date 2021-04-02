@@ -23,13 +23,13 @@ async function run(): Promise<void> {
     })
 
     for (const pullRequest of data) {
-      const { data: pullRequestDetailsData } = octokit.rest.pulls.get({
+      const responsepr = octokit.rest.pulls.get({
         owner,
         repo,
         pull_number: pullRequest.number
       })
 
-      core.debug(JSON.stringify(pullRequestDetailsData))
+      core.debug(JSON.stringify(responsepr))
 
       const pullRequestValid = true
       // isPullRequestMergeable(pullRequest) &&
