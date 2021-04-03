@@ -87,7 +87,7 @@ const isPullRequestMergeable = (pullRequest: PullRequest): boolean => pullReques
 // todo enable checks verification to avoid failed merges
 const arePullRequestChecksOk = (pullRequest: PullRequest): boolean => !!pullRequest
 
-const arePullRequestReviewsOk = (pullRequest: PullRequest): boolean => pullRequest.reviewScore > 1
+const arePullRequestReviewsOk = (pullRequest: PullRequest): boolean => pullRequest.reviewScore >= 1
 
 const isPullRequestMature = (pullRequest: PullRequest): boolean =>
   (+new Date() - pullRequest.updatedAt.getTime()) / (1000 * 60 * 60) > 24
