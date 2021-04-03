@@ -1,3 +1,10 @@
-import { enforceDemocracy } from './democrat'
+import { DemocratParameters, enforceDemocracy } from './democrat'
 
-enforceDemocracy(process.env.GITHUB_TOKEN || '', process.env.GITHUB_OWNER || '', process.env.GITHUB_REPO || '')
+const democratParameter: DemocratParameters = {
+  token: process.env.GITHUB_TOKEN || '',
+  owner: process.env.GITHUB_OWNER || '',
+  repo: process.env.GITHUB_REPO || '',
+  dryRun: true,
+}
+
+enforceDemocracy(democratParameter)
