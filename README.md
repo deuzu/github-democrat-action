@@ -63,6 +63,17 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+The job will hunt pull requests and merge ones that fit the following constraints:
+- receive more than half of the majority vote cast (votes are review approves and request changes)
+- is ready to be merged (with a `ready` label)
+- is mature (last commit is older than 24h)
+- target is the `main` branch
+
+To avoid fraud, it's advised to add protections on the main branch:
+- [X] Require pull request reviews before merging
+- [X] Dismiss stale pull request approvals when new commits are pushed
+- [X] Require status checks to pass before merging
+
 ## Roadmap
 
 See the [open issues](https://github.com/deuzu/github-democrat-action/issues) for a list of proposed features (and known issues).
