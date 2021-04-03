@@ -1,5 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import { GitHub } from '@actions/github/lib/utils'
+import { Endpoints } from '@octokit/types'
 
 export interface DemocratParameters {
   readonly token: string
@@ -7,7 +9,8 @@ export interface DemocratParameters {
   readonly repo: string
   readonly dryRun?: boolean
 }
-interface PullRequest {
+
+interface PullCandidate {
   readonly number: number
   readonly mergeable: boolean
   readonly updatedAt: Date
@@ -16,39 +19,107 @@ interface PullRequest {
   readonly reviewScore: number
 }
 
-export const enforceDemocracy = async (parameters: DemocratParameters): Promise<void> => {
-  const { token, owner, repo, dryRun } = parameters
+type listPullsData = Endpoints['GET /repos/{owner}/{repo}/pulls']['response']['data']
+type getPullData = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data']
+type listReviewsData = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews']['response']['data']
 
-  core.info(`Implementing democracy on ${owner}/${repo}. Resistence is futile.`)
+export default class Democrat {
+  private octokit: InstanceType<typeof GitHub>
+  private democratParameters: DemocratParameters
 
-  const octokit = github.getOctokit(token)
+  constructor(democratParameters: DemocratParameters) {
+    this.democratParameters = democratParameters
+    this.octokit = github.getOctokit(democratParameters.token)
+  }
 
-  const { data: pullRequests } = await octokit.pulls.list({
-    owner,
-    repo,
-    state: 'open',
-  })
+  async enforceDemocracy(): Promise<void> {
+    const { owner, repo } = this.democratParameters
+    core.info(`Implementing democracy on ${owner}/${repo}. Resistence is futile.`)
 
-  for (const { number: pullRequestNumber } of pullRequests) {
-    const { data: pullRequestDetail } = await octokit.pulls.get({
+    const pulls = await this.fetchPulls()
+    core.info(`${pulls.length} pull request(s) is/are candidate(s) for merge.`)
+    const pullsAndReviews = await this.fetchPullDetailsAndReviews(pulls)
+    const pullCandidates = this.buildPullCandidates(pullsAndReviews)
+    const electedPullCandidates = pullCandidates.filter(this.validatePullCandidate)
+
+    await this.mergePulls(electedPullCandidates)
+
+    core.info('Democracy enforcer will be back.')
+  }
+
+  private async fetchPulls(): Promise<listPullsData> {
+    const { owner, repo } = this.democratParameters
+
+    const response = await this.octokit.pulls.list({
       owner,
       repo,
-      pull_number: pullRequestNumber
+      state: 'open',
     })
 
-    const { data: pullRequestReviews } = await octokit.pulls.listReviews({
+    return response.data
+  }
+
+  private async fetchPullDetailsAndReviews(pulls: listPullsData): Promise<[getPullData, listReviewsData][]> {
+    const promises: Promise<[getPullData, listReviewsData]>[] = pulls.map(
+      async ({ number: pullRequestNumber }) =>
+        new Promise(async (resolve, reject) => {
+          const pull = this.fetchPullDetails(pullRequestNumber)
+          const reviews = this.fetchReviews(pullRequestNumber)
+
+          try {
+            const all = await Promise.all([pull, reviews])
+            resolve(all)
+          } catch (error) {
+            reject(error)
+          }
+        })
+    )
+
+    return Promise.all(promises)
+  }
+
+  private async fetchPullDetails(pullNumber: number): Promise<getPullData> {
+    const { owner, repo } = this.democratParameters
+
+    const response = await this.octokit.pulls.get({
       owner,
       repo,
-      pull_number: pullRequestNumber
+      pull_number: pullNumber,
     })
 
-    const pullRequest: PullRequest = {
-      number: pullRequestDetail.number,
-      mergeable: !!pullRequestDetail.mergeable,
-      updatedAt: new Date(pullRequestDetail.updated_at),
-      labels: pullRequestDetail.labels.map((label) => label.name),
-      base: pullRequestDetail.base.ref,
-      reviewScore: pullRequestReviews.reduce((accumulator, review) => {
+    return response.data
+  }
+
+  private async fetchReviews(pullNumber: number): Promise<listReviewsData> {
+    const { owner, repo } = this.democratParameters
+
+    const response = await this.octokit.pulls.listReviews({
+      owner,
+      repo,
+      pull_number: pullNumber,
+    })
+
+    return response.data
+  }
+
+  private buildPullCandidates(pullsAndReviews: [getPullData, listReviewsData][]): PullCandidate[] {
+    const pullCandidates = []
+
+    for (const [pull, reviews] of pullsAndReviews) {
+      pullCandidates.push(this.buildPullCandidate(pull, reviews))
+    }
+
+    return pullCandidates
+  }
+
+  private buildPullCandidate(pull: getPullData, reviews: listReviewsData): PullCandidate {
+    return {
+      number: pull.number,
+      mergeable: !!pull.mergeable,
+      updatedAt: new Date(pull.updated_at),
+      labels: pull.labels.map((label) => label.name),
+      base: pull.base.ref,
+      reviewScore: reviews.reduce((accumulator, review): number => {
         if ('APPROVED' === review.state) {
           accumulator += 1
         }
@@ -58,54 +129,43 @@ export const enforceDemocracy = async (parameters: DemocratParameters): Promise<
         }
 
         return accumulator
-      }, 0)
+      }, 0),
     }
-
-    const pullRequestValid =
-      isPullRequestMergeable(pullRequest) &&
-      isPullRequestBaseValid(pullRequest) &&
-      arePullRequestChecksOk(pullRequest) &&
-      arePullRequestReviewsOk(pullRequest) &&
-      isPullRequestReadyToBeMerged(pullRequest) &&
-      isPullRequestMature(pullRequest)
-
-    if (!pullRequestValid) {
-      core.info(`Pull Request #${pullRequest.number} does not fit contraints for merge`)
-
-      continue
-    }
-
-    core.info(`Democracy has spoken. Pull Request #${pullRequest.number} has been voted for merge.`)
-
-    if (dryRun === true) {
-      core.info(`Dry-run enabled. Pull Request #${pullRequest.number} should have been merged.`)
-
-      continue
-    }
-
-    await octokit.pulls.merge({
-      owner,
-      repo,
-      pull_number: pullRequest.number,
-      merge_method: 'squash'
-    })
-
-    core.info(`Pull Request #${pullRequest.number} merged.`)
   }
 
-  core.info('Democracy enforcer will be back.')
+  private validatePullCandidate = (pullCandidate: PullCandidate): boolean => {
+    return (
+      pullCandidate.mergeable &&
+      pullCandidate.reviewScore >= 1 &&
+      (+new Date() - pullCandidate.updatedAt.getTime()) / (1000 * 60 * 60) > 24 &&
+      -1 !== pullCandidate.labels.indexOf('ready') &&
+      'main' === pullCandidate.base
+    )
+  }
+
+  private async mergePulls(pulls: PullCandidate[]): Promise<void[]> {
+    const promises = pulls.map(async (pull) => this.mergePull(pull))
+
+    return Promise.all(promises)
+  }
+
+  private async mergePull(pull: PullCandidate): Promise<void> {
+    const { owner, repo, dryRun } = this.democratParameters
+    core.info(`Democracy has spoken. Pull Request #${pull.number} has been voted for merge.`)
+
+    if (dryRun === true) {
+      core.info(`Dry-run enabled. Pull Request #${pull.number} should have been merged.`)
+
+      return new Promise((resolve) => resolve(undefined))
+    }
+
+    await this.octokit.pulls.merge({
+      owner,
+      repo,
+      pull_number: pull.number,
+      merge_method: 'squash',
+    })
+
+    return core.info(`Pull Request #${pull.number} merged.`)
+  }
 }
-
-const isPullRequestMergeable = (pullRequest: PullRequest): boolean => pullRequest.mergeable
-
-// todo enable checks verification to avoid failed merges
-const arePullRequestChecksOk = (pullRequest: PullRequest): boolean => !!pullRequest
-
-const arePullRequestReviewsOk = (pullRequest: PullRequest): boolean => pullRequest.reviewScore >= 1
-
-const isPullRequestMature = (pullRequest: PullRequest): boolean =>
-  (+new Date() - pullRequest.updatedAt.getTime()) / (1000 * 60 * 60) > 24
-
-const isPullRequestReadyToBeMerged = (pullRequest: PullRequest): boolean => -1 !== pullRequest.labels.indexOf('ready')
-
-const isPullRequestBaseValid = (pullRequest: PullRequest): boolean => 'main' === pullRequest.base

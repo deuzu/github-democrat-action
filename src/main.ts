@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { DemocratParameters, enforceDemocracy } from './democrat'
+import Democrat, { DemocratParameters } from './democrat'
 
 async function run(): Promise<void> {
   try {
@@ -14,7 +14,8 @@ async function run(): Promise<void> {
     }
 
     const democratParameter: DemocratParameters = { token, owner, repo }
-    enforceDemocracy(democratParameter)
+    const democrat = new Democrat(democratParameter)
+    await democrat.enforceDemocracy()
   } catch (error) {
     core.setFailed(error.message)
   }

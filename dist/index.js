@@ -36,35 +36,99 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.enforceDemocracy = void 0;
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
-const enforceDemocracy = (token, owner, repo) => __awaiter(void 0, void 0, void 0, function* () {
-    core.info(`Implementing democracy on ${owner}/${repo}. Resistence is futile.`);
-    const octokit = github.getOctokit(token);
-    const { data } = yield octokit.pulls.list({
-        owner,
-        repo,
-        state: 'open'
-    });
-    for (const { number: pullRequestNumber } of data) {
-        const { data: pullRequestDetail } = yield octokit.pulls.get({
-            owner,
-            repo,
-            pull_number: pullRequestNumber
+class Democrat {
+    constructor(democratParameters) {
+        this.validatePullCandidate = (pullCandidate) => {
+            return (pullCandidate.mergeable &&
+                pullCandidate.reviewScore >= 1 &&
+                (+new Date() - pullCandidate.updatedAt.getTime()) / (1000 * 60 * 60) > 24 &&
+                -1 !== pullCandidate.labels.indexOf('ready') &&
+                'main' === pullCandidate.base);
+        };
+        this.democratParameters = democratParameters;
+        this.octokit = github.getOctokit(democratParameters.token);
+    }
+    enforceDemocracy() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = this.democratParameters;
+            core.info(`Implementing democracy on ${owner}/${repo}. Resistence is futile.`);
+            const pulls = yield this.fetchPulls();
+            core.info(`${pulls.length} pull request(s) is/are candidate(s) for merge.`);
+            const pullsAndReviews = yield this.fetchPullDetailsAndReviews(pulls);
+            const pullCandidates = this.buildPullCandidates(pullsAndReviews);
+            const electedPullCandidates = pullCandidates.filter(this.validatePullCandidate);
+            yield this.mergePulls(electedPullCandidates);
+            core.info('Democracy enforcer will be back.');
         });
-        const { data: pullRequestReviews } = yield octokit.pulls.listReviews({
-            owner,
-            repo,
-            pull_number: pullRequestNumber
+    }
+    fetchPulls() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = this.democratParameters;
+            const response = yield this.octokit.pulls.list({
+                owner,
+                repo,
+                state: 'open',
+            });
+            return response.data;
         });
-        const pullRequest = {
-            number: pullRequestDetail.number,
-            mergeable: !!pullRequestDetail.mergeable,
-            updatedAt: new Date(pullRequestDetail.updated_at),
-            labels: pullRequestDetail.labels.map((label) => label.name),
-            base: pullRequestDetail.base.ref,
-            reviewScore: pullRequestReviews.reduce((accumulator, review) => {
+    }
+    fetchPullDetailsAndReviews(pulls) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const promises = pulls.map(({ number: pullRequestNumber }) => __awaiter(this, void 0, void 0, function* () {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    const pull = this.fetchPullDetails(pullRequestNumber);
+                    const reviews = this.fetchReviews(pullRequestNumber);
+                    try {
+                        const all = yield Promise.all([pull, reviews]);
+                        resolve(all);
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                }));
+            }));
+            return Promise.all(promises);
+        });
+    }
+    fetchPullDetails(pullNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = this.democratParameters;
+            const response = yield this.octokit.pulls.get({
+                owner,
+                repo,
+                pull_number: pullNumber,
+            });
+            return response.data;
+        });
+    }
+    fetchReviews(pullNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = this.democratParameters;
+            const response = yield this.octokit.pulls.listReviews({
+                owner,
+                repo,
+                pull_number: pullNumber,
+            });
+            return response.data;
+        });
+    }
+    buildPullCandidates(pullsAndReviews) {
+        const pullCandidates = [];
+        for (const [pull, reviews] of pullsAndReviews) {
+            pullCandidates.push(this.buildPullCandidate(pull, reviews));
+        }
+        return pullCandidates;
+    }
+    buildPullCandidate(pull, reviews) {
+        return {
+            number: pull.number,
+            mergeable: !!pull.mergeable,
+            updatedAt: new Date(pull.updated_at),
+            labels: pull.labels.map((label) => label.name),
+            base: pull.base.ref,
+            reviewScore: reviews.reduce((accumulator, review) => {
                 if ('APPROVED' === review.state) {
                     accumulator += 1;
                 }
@@ -72,37 +136,34 @@ const enforceDemocracy = (token, owner, repo) => __awaiter(void 0, void 0, void 
                     accumulator += -1;
                 }
                 return accumulator;
-            }, 0)
+            }, 0),
         };
-        const pullRequestValid = isPullRequestMergeable(pullRequest) &&
-            isPullRequestBaseValid(pullRequest) &&
-            arePullRequestChecksOk(pullRequest) &&
-            arePullRequestReviewsOk(pullRequest) &&
-            isPullRequestReadyToBeMerged(pullRequest) &&
-            isPullRequestMature(pullRequest);
-        if (!pullRequestValid) {
-            core.info(`Pull Request #${pullRequest.number} does not fit contraints for merge`);
-            continue;
-        }
-        core.info(`Democracy has spoken. Pull Request #${pullRequest.number} has been voted for merge.`);
-        yield octokit.pulls.merge({
-            owner,
-            repo,
-            pull_number: pullRequest.number,
-            merge_method: 'squash'
-        });
-        core.info(`Pull Request #${pullRequest.number} merged.`);
     }
-    core.info('Democracy enforcer will be back.');
-});
-exports.enforceDemocracy = enforceDemocracy;
-const isPullRequestMergeable = (pullRequest) => pullRequest.mergeable;
-// todo enable checks verification to avoid failed merges
-const arePullRequestChecksOk = (pullRequest) => !!pullRequest;
-const arePullRequestReviewsOk = (pullRequest) => pullRequest.reviewScore > 1;
-const isPullRequestMature = (pullRequest) => (+new Date() - pullRequest.updatedAt.getTime()) / (1000 * 60 * 60) > 24;
-const isPullRequestReadyToBeMerged = (pullRequest) => -1 !== pullRequest.labels.indexOf('ready');
-const isPullRequestBaseValid = (pullRequest) => 'main' === pullRequest.base;
+    mergePulls(pulls) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const promises = pulls.map((pull) => __awaiter(this, void 0, void 0, function* () { return this.mergePull(pull); }));
+            return Promise.all(promises);
+        });
+    }
+    mergePull(pull) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo, dryRun } = this.democratParameters;
+            core.info(`Democracy has spoken. Pull Request #${pull.number} has been voted for merge.`);
+            if (dryRun === true) {
+                core.info(`Dry-run enabled. Pull Request #${pull.number} should have been merged.`);
+                return new Promise((resolve) => resolve(undefined));
+            }
+            yield this.octokit.pulls.merge({
+                owner,
+                repo,
+                pull_number: pull.number,
+                merge_method: 'squash',
+            });
+            return core.info(`Pull Request #${pull.number} merged.`);
+        });
+    }
+}
+exports.default = Democrat;
 
 
 /***/ }),
@@ -140,10 +201,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
-const democrat_1 = __webpack_require__(209);
+const democrat_1 = __importDefault(__webpack_require__(209));
 function run() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
@@ -155,7 +219,9 @@ function run() {
             if (!owner || !repo) {
                 throw new Error('`owner` and/or `repo` missing from Github context');
             }
-            democrat_1.enforceDemocracy(token, owner, repo);
+            const democratParameter = { token, owner, repo };
+            const democrat = new democrat_1.default(democratParameter);
+            yield democrat.enforceDemocracy();
         }
         catch (error) {
             core.setFailed(error.message);
