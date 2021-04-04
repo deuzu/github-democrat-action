@@ -41,6 +41,7 @@ export default class Democrat {
     const pullsAndReviews = await this.fetchPullDetailsAndReviews(pulls)
     const pullCandidates = this.buildPullCandidates(pullsAndReviews)
     const electedPullCandidates = pullCandidates.filter(this.validatePullCandidate)
+    core.info(`${electedPullCandidates.length} pull request(s) left after validation.`)
 
     await this.mergePulls(electedPullCandidates)
 
@@ -154,7 +155,7 @@ export default class Democrat {
     core.info(`Democracy has spoken. Pull Request #${pull.number} has been voted for merge.`)
 
     if (dryRun === true) {
-      core.info(`Dry-run enabled. Pull Request #${pull.number} should have been merged.`)
+      core.info(`Dry-run enabled. Pull Request #${pull.number} will not be merged.`)
 
       return new Promise((resolve) => resolve(undefined))
     }

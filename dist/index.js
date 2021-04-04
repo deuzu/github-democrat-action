@@ -59,6 +59,7 @@ class Democrat {
             const pullsAndReviews = yield this.fetchPullDetailsAndReviews(pulls);
             const pullCandidates = this.buildPullCandidates(pullsAndReviews);
             const electedPullCandidates = pullCandidates.filter(this.validatePullCandidate);
+            core.info(`${electedPullCandidates.length} pull request(s) left after validation.`);
             yield this.mergePulls(electedPullCandidates);
             core.info('Democracy enforcer will be back.');
         });
@@ -150,7 +151,7 @@ class Democrat {
             const { owner, repo, dryRun } = this.democratParameters;
             core.info(`Democracy has spoken. Pull Request #${pull.number} has been voted for merge.`);
             if (dryRun === true) {
-                core.info(`Dry-run enabled. Pull Request #${pull.number} should have been merged.`);
+                core.info(`Dry-run enabled. Pull Request #${pull.number} will not be merged.`);
                 return new Promise((resolve) => resolve(undefined));
             }
             yield this.octokit.pulls.merge({
