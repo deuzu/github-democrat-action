@@ -80,12 +80,12 @@ See the [open issues](https://github.com/deuzu/github-democrat-action/issues) fo
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **extremely appreciated**.  
+Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **extremely appreciated**.
 Please read [those guidelines](./.github/CONTRIBUTING.md) before contributing to this repository.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feat-amazing-feature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+3. Commit your Changes (`git commit -m 'feat(scope): Add some AmazingFeature' -m "Closes #42"`)
 4. Push to the Branch (`git push origin feat-amazing-feature`)
 5. Open a Pull Request
 

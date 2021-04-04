@@ -36,9 +36,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__webpack_require__(186));
 const github = __importStar(__webpack_require__(438));
 class Democrat {
+    /* eslint-enable @typescript-eslint/no-unused-vars */
     constructor(democratParameters) {
         this.validatePullCandidate = (pullCandidate) => {
             return (pullCandidate.mergeable &&
@@ -49,19 +49,22 @@ class Democrat {
         };
         this.democratParameters = democratParameters;
         this.octokit = github.getOctokit(democratParameters.token);
+        /* eslint-disable no-console */
+        this.logger = democratParameters.logFunction || ((level, message) => console.log(`${level} - ${message}`));
+        /* eslint-enable no-console */
     }
     enforceDemocracy() {
         return __awaiter(this, void 0, void 0, function* () {
             const { owner, repo } = this.democratParameters;
-            core.info(`Implementing democracy on ${owner}/${repo}. Resistence is futile.`);
+            this.logger('info', `Implementing democracy on ${owner}/${repo}, resistance is futile.`);
             const pulls = yield this.fetchPulls();
-            core.info(`${pulls.length} pull request(s) is/are candidate(s) for merge.`);
+            this.logger('info', `${pulls.length} pull request(s) is/are candidate(s) for merge.`);
             const pullsAndReviews = yield this.fetchPullDetailsAndReviews(pulls);
             const pullCandidates = this.buildPullCandidates(pullsAndReviews);
             const electedPullCandidates = pullCandidates.filter(this.validatePullCandidate);
-            core.info(`${electedPullCandidates.length} pull request(s) left after validation.`);
+            this.logger('info', `${electedPullCandidates.length} pull request(s) left after validation.`);
             yield this.mergePulls(electedPullCandidates);
-            core.info('Democracy enforcer will be back.');
+            this.logger('info', 'Democracy enforcer will be back.');
         });
     }
     fetchPulls() {
@@ -149,9 +152,9 @@ class Democrat {
     mergePull(pull) {
         return __awaiter(this, void 0, void 0, function* () {
             const { owner, repo, dryRun } = this.democratParameters;
-            core.info(`Democracy has spoken. Pull Request #${pull.number} has been voted for merge.`);
+            this.logger('info', `Democracy has spoken. Pull Request #${pull.number} has been voted for merge.`);
             if (dryRun === true) {
-                core.info(`Dry-run enabled. Pull Request #${pull.number} will not be merged.`);
+                this.logger('info', `Dry-run enabled. Pull Request #${pull.number} will not be merged.`);
                 return new Promise((resolve) => resolve(undefined));
             }
             yield this.octokit.pulls.merge({
@@ -160,7 +163,7 @@ class Democrat {
                 pull_number: pull.number,
                 merge_method: 'squash',
             });
-            return core.info(`Pull Request #${pull.number} merged.`);
+            return this.logger('info', `Pull Request #${pull.number} merged.`);
         });
     }
 }
@@ -213,14 +216,24 @@ function run() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const token = core.getInput('github-token');
             const context = github.context;
+            const token = core.getInput('github-token');
             const owner = (_a = context.payload.repository) === null || _a === void 0 ? void 0 : _a.owner.name;
             const repo = (_b = context.payload.repository) === null || _b === void 0 ? void 0 : _b.name;
             if (!owner || !repo) {
                 throw new Error('`owner` and/or `repo` missing from Github context');
             }
-            const democratParameter = { token, owner, repo };
+            const democratParameter = {
+                token,
+                owner,
+                repo,
+                logFunction: (level, message) => {
+                    /* eslint-disable @typescript-eslint/no-explicit-any */
+                    const coreUntyped = core;
+                    coreUntyped[level](message);
+                    /* eslint-enable @typescript-eslint/no-explicit-any */
+                },
+            };
             const democrat = new democrat_1.default(democratParameter);
             yield democrat.enforceDemocracy();
         }

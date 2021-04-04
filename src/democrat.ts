@@ -1,4 +1,3 @@
-import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
 import { Endpoints } from '@octokit/types'
@@ -8,6 +7,9 @@ export interface DemocratParameters {
   readonly owner: string
   readonly repo: string
   readonly dryRun?: boolean
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  readonly logFunction?: (level: string, message: string) => void
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 }
 
 interface PullCandidate {
@@ -24,28 +26,34 @@ type getPullData = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['r
 type listReviewsData = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews']['response']['data']
 
 export default class Democrat {
-  private octokit: InstanceType<typeof GitHub>
   private democratParameters: DemocratParameters
+  private octokit: InstanceType<typeof GitHub>
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  private logger: (level: string, message: string) => void
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   constructor(democratParameters: DemocratParameters) {
     this.democratParameters = democratParameters
     this.octokit = github.getOctokit(democratParameters.token)
+    /* eslint-disable no-console */
+    this.logger = democratParameters.logFunction || ((level, message) => console.log(`${level} - ${message}`))
+    /* eslint-enable no-console */
   }
 
   async enforceDemocracy(): Promise<void> {
     const { owner, repo } = this.democratParameters
-    core.info(`Implementing democracy on ${owner}/${repo}. Resistence is futile.`)
+    this.logger('info', `Implementing democracy on ${owner}/${repo}, resistance is futile.`)
 
     const pulls = await this.fetchPulls()
-    core.info(`${pulls.length} pull request(s) is/are candidate(s) for merge.`)
+    this.logger('info', `${pulls.length} pull request(s) is/are candidate(s) for merge.`)
     const pullsAndReviews = await this.fetchPullDetailsAndReviews(pulls)
     const pullCandidates = this.buildPullCandidates(pullsAndReviews)
     const electedPullCandidates = pullCandidates.filter(this.validatePullCandidate)
-    core.info(`${electedPullCandidates.length} pull request(s) left after validation.`)
+    this.logger('info', `${electedPullCandidates.length} pull request(s) left after validation.`)
 
     await this.mergePulls(electedPullCandidates)
 
-    core.info('Democracy enforcer will be back.')
+    this.logger('info', 'Democracy enforcer will be back.')
   }
 
   private async fetchPulls(): Promise<listPullsData> {
@@ -152,10 +160,10 @@ export default class Democrat {
 
   private async mergePull(pull: PullCandidate): Promise<void> {
     const { owner, repo, dryRun } = this.democratParameters
-    core.info(`Democracy has spoken. Pull Request #${pull.number} has been voted for merge.`)
+    this.logger('info', `Democracy has spoken. Pull Request #${pull.number} has been voted for merge.`)
 
     if (dryRun === true) {
-      core.info(`Dry-run enabled. Pull Request #${pull.number} will not be merged.`)
+      this.logger('info', `Dry-run enabled. Pull Request #${pull.number} will not be merged.`)
 
       return new Promise((resolve) => resolve(undefined))
     }
@@ -167,6 +175,6 @@ export default class Democrat {
       merge_method: 'squash',
     })
 
-    return core.info(`Pull Request #${pull.number} merged.`)
+    return this.logger('info', `Pull Request #${pull.number} merged.`)
   }
 }
