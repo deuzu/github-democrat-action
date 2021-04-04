@@ -1,8 +1,9 @@
 <br />
 <p align="center">
-  <!-- <a href="#">
-    <img src="./logo.png" alt="Logo" width="80" height="80">
-  </a> -->
+  <a href="#">
+    <img src="./logo.png" alt="Logo" width="100" height="67">
+    <!-- logomakr.com/6hgBHr -->
+  </a>
 
   <h3 align="center">Github Democrat Action</h3>
 
