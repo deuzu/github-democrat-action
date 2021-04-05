@@ -1,8 +1,8 @@
 <br />
 <p align="center">
   <a href="#">
-    <img src="./logo.png" alt="Logo" width="100" height="67">
-    <!-- logomakr.com/6hgBHr -->
+    <img src="./logo.svg" alt="Logo" width="100" height="67">
+    <!-- logomakr.com/6hgBHr && picsvg.com -->
   </a>
 
   <h3 align="center">Github Democrat Action</h3>
