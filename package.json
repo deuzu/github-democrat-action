@@ -1,8 +1,7 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
-  "private": true,
-  "description": "TypeScript template action",
+  "name": "github-democrat-action",
+  "version": "0.0.4-alpha",
+  "description": "Enforce democracy on a repository",
   "main": "lib/main.js",
   "scripts": {
     "start": "tsc && node lib/dev.js",
@@ -16,14 +15,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/deuzu/github-democrat-action.git"
   },
   "keywords": [
-    "actions",
-    "node",
-    "setup"
+    "github",
+    "democracy",
+    "pull-requests",
+    "open-source",
+    "management"
   ],
-  "author": "",
+  "author": "deuzu",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.6",
