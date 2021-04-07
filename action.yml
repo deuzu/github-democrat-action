@@ -7,10 +7,13 @@ branding:
   color: green
 
 inputs:
-  github-token:
-    required: false
+  githubToken:
+    required: true
     description: The Github token that give permission on the repository.
-    default: '${{ secret.GITHUB_TOKEN }}'
+  dryRun:
+    required: false
+    description: "When `dryRun: true` the Github democrat won't merge any pull requests"
+    default: false
 
 runs:
   using: node12

@@ -61,7 +61,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: deuzu/github-democrat-action
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }} # GitHub automatically creates the GITHUB_TOKEN secret
+          # dryRun: true # the Github democrat will process but won't merge pull requests
 ```
 
 The job will hunt pull requests and merge ones that fit the following constraints:

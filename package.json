@@ -4,7 +4,7 @@
   "description": "Enforce democracy on a repository",
   "main": "lib/main.js",
   "scripts": {
-    "start": "tsc && node lib/dev.js",
+    "start": "tsc && node lib/main.js",
     "build": "tsc",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
@@ -28,7 +28,8 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.6",
-    "@actions/github": "^4.0.0"
+    "@actions/github": "^4.0.0",
+    "dotenv": "^8.2.0"
   },
   "devDependencies": {
     "@octokit/types": "^6.13.0",
