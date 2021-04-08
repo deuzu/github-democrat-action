@@ -38,7 +38,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github = __importStar(__nccwpck_require__(438));
 class Democrat {
-    /* eslint-enable @typescript-eslint/no-unused-vars */
     constructor(democratParameters) {
         this.validatePullCandidate = (pullCandidate) => {
             return (pullCandidate.mergeable &&
