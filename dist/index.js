@@ -38,19 +38,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const github = __importStar(__nccwpck_require__(438));
 class Democrat {
-    constructor(democratParameters) {
-        this.validatePullCandidate = (pullCandidate) => {
-            return (pullCandidate.mergeable &&
-                pullCandidate.reviewScore >= 1 &&
-                (+new Date() - pullCandidate.updatedAt.getTime()) / (1000 * 60 * 60) > 24 &&
-                -1 !== pullCandidate.labels.indexOf('ready') &&
-                'main' === pullCandidate.base);
-        };
+    constructor(democratParameters, pullRequestParameters) {
         this.democratParameters = democratParameters;
-        this.octokit = github.getOctokit(democratParameters.token);
+        this.pullRequestParameters = pullRequestParameters;
         /* eslint-disable no-console */
         this.logger = democratParameters.logFunction || ((level, message) => console.log(`${level} - ${message}`));
         /* eslint-enable no-console */
+        this.octokit = github.getOctokit(democratParameters.token);
     }
     enforceDemocracy() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -60,7 +54,14 @@ class Democrat {
             this.logger('info', `${pulls.length} pull request(s) is/are candidate(s) for merge.`);
             const pullsAndReviews = yield this.fetchPullDetailsAndReviews(pulls);
             const pullCandidates = this.buildPullCandidates(pullsAndReviews);
-            const electedPullCandidates = pullCandidates.filter(this.validatePullCandidate);
+            const electedPullCandidates = pullCandidates.filter((pull) => {
+                const errors = this.validatePullCandidate(pull);
+                if (errors.length > 0) {
+                    this.logger('info', `Pull request #${pull.number} did not pass validation. Errors: ${errors.join(', ')}.`);
+                    return false;
+                }
+                return true;
+            });
             this.logger('info', `${electedPullCandidates.length} pull request(s) left after validation.`);
             yield this.mergePulls(electedPullCandidates);
             this.logger('info', 'Democracy enforcer will be back.');
@@ -142,6 +143,20 @@ class Democrat {
             }, 0),
         };
     }
+    validatePullCandidate(pullCandidate) {
+        const errors = [];
+        const { minimumReviewScore, maturity, markAsMergeableLabel, targetBranch } = this.pullRequestParameters;
+        const lastCommitSinceHours = (+new Date() - pullCandidate.updatedAt.getTime()) / (1000 * 60 * 60);
+        const hasMergeableLabel = -1 !== pullCandidate.labels.indexOf(markAsMergeableLabel);
+        pullCandidate.mergeable || errors.push('not mergeable');
+        pullCandidate.reviewScore >= minimumReviewScore || errors.push(`review score too low: ${pullCandidate.reviewScore}`);
+        lastCommitSinceHours > maturity ||
+            errors.push(`not mature enough (last commit ${lastCommitSinceHours.toPrecision(1)}h ago)`);
+        hasMergeableLabel || errors.push(`missing \`${markAsMergeableLabel}\` label`);
+        targetBranch === pullCandidate.base ||
+            errors.push(`wrong target branch: ${pullCandidate.base} instead of ${targetBranch}`);
+        return errors;
+    }
     mergePulls(pulls) {
         return __awaiter(this, void 0, void 0, function* () {
             const promises = pulls.map((pull) => __awaiter(this, void 0, void 0, function* () { return this.mergePull(pull); }));
@@ -218,14 +233,12 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
-            const token = core.getInput('githubToken') || process.env.GITHUB_TOKEN || '';
             const [owner, repo] = (((_a = context.payload.repository) === null || _a === void 0 ? void 0 : _a.full_name) || process.env.GITHUB_REPOSITORY || '/').split('/');
-            const dryRun = (core.getInput('dryRun') || process.env.DRY_RUN) === 'true';
-            const democratParameter = {
-                token,
+            const democratParameters = {
+                token: core.getInput('githubToken') || process.env.GITHUB_TOKEN || '',
                 owner,
                 repo,
-                dryRun,
+                dryRun: (core.getInput('dryRun') || process.env.DRY_RUN) === 'true',
                 logFunction: (level, message) => {
                     /* eslint-disable @typescript-eslint/no-explicit-any */
                     const coreUntyped = core;
@@ -233,7 +246,13 @@ function run() {
                     /* eslint-enable @typescript-eslint/no-explicit-any */
                 },
             };
-            const democrat = new democrat_1.default(democratParameter);
+            const pullRequestParameters = {
+                minimumReviewScore: parseInt(core.getInput('prMinimumReviewScore') || process.env.PR_MINIMUM_REVIEW_SCORE || ''),
+                maturity: parseInt(core.getInput('prMaturity') || process.env.PR_MATURITY || ''),
+                markAsMergeableLabel: core.getInput('prMarkAsMegeableLabel') || process.env.PR_MARK_AS_MERGEABLE_LABEL || '',
+                targetBranch: core.getInput('prTargetBranch') || process.env.PR_TARGET_BRANCH || '',
+            };
+            const democrat = new democrat_1.default(democratParameters, pullRequestParameters);
             yield democrat.enforceDemocracy();
         }
         catch (error) {

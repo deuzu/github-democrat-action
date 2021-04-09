@@ -1,9 +1,7 @@
 <br />
 <p align="center">
-  <a href="#">
-    <img src="./logo.svg" alt="Logo" width="100" height="67">
-    <!-- logomakr.com/6hgBHr && picsvg.com -->
-  </a>
+  <img src="./logo.svg" alt="Logo" width="100" height="67">
+  <!-- logomakr.com/6hgBHr && picsvg.com -->
 
   <h3 align="center">Github Democrat Action</h3>
 
@@ -62,16 +60,22 @@ jobs:
       - uses: deuzu/github-democrat-action
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }} # GitHub automatically creates the GITHUB_TOKEN secret
-          # dryRun: true # the Github democrat will process but won't merge pull requests
+          # dryRun: true
+          # prMinimumReviewScore: 1
+          # prMaturity: 24
+          # prMarkAsMegeableLabel: ready
+          # prTargetBranch: main
 ```
 
-The job will hunt pull requests and merge ones that fit the following constraints:
-- receive more than half of the majority vote cast (votes are review approves and request changes)
-- is ready to be merged (with a `ready` label)
-- is mature (last commit is older than 24h)
-- target is the `main` branch
+Cf. [./action.yaml](./action.yaml) for action inputs.
 
-To avoid fraud, it's advised to add protections on the main branch:
+The job will look for open pull requests and merge ones that satisfy the following constraints (configurable):
+- receive more than half of the majority vote cast (votes are review approves and request changes)
+- is ready to be merged (with a configurable label)
+- is mature (last commit is older than a configurable delay)
+- target is the configured branch
+
+To avoid fraud, it's advised to add protections on the target branch:
 - [X] Require pull request reviews before merging
 - [X] Dismiss stale pull request approvals when new commits are pushed
 - [X] Require status checks to pass before merging

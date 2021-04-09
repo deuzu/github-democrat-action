@@ -1,22 +1,20 @@
 import dotenv from 'dotenv'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import Democrat, { DemocratParameters } from './democrat'
+import Democrat, { DemocratParameters, PullRequestParameters } from './democrat'
 
 dotenv.config()
 
 async function run(): Promise<void> {
   try {
     const context = github.context
-    const token = core.getInput('githubToken') || process.env.GITHUB_TOKEN || ''
     const [owner, repo] = (context.payload.repository?.full_name || process.env.GITHUB_REPOSITORY || '/').split('/')
-    const dryRun = (core.getInput('dryRun') || process.env.DRY_RUN) === 'true'
 
-    const democratParameter: DemocratParameters = {
-      token,
+    const democratParameters: DemocratParameters = {
+      token: core.getInput('githubToken') || process.env.GITHUB_TOKEN || '',
       owner,
       repo,
-      dryRun,
+      dryRun: (core.getInput('dryRun') || process.env.DRY_RUN) === 'true',
       logFunction: (level: string, message: string) => {
         /* eslint-disable @typescript-eslint/no-explicit-any */
         const coreUntyped = core as any
@@ -25,7 +23,14 @@ async function run(): Promise<void> {
       },
     }
 
-    const democrat = new Democrat(democratParameter)
+    const pullRequestParameters: PullRequestParameters = {
+      minimumReviewScore: parseInt(core.getInput('prMinimumReviewScore') || process.env.PR_MINIMUM_REVIEW_SCORE || ''),
+      maturity: parseInt(core.getInput('prMaturity') || process.env.PR_MATURITY || ''),
+      markAsMergeableLabel: core.getInput('prMarkAsMegeableLabel') || process.env.PR_MARK_AS_MERGEABLE_LABEL || '',
+      targetBranch: core.getInput('prTargetBranch') || process.env.PR_TARGET_BRANCH || '',
+    }
+
+    const democrat = new Democrat(democratParameters, pullRequestParameters)
     await democrat.enforceDemocracy()
   } catch (error) {
     core.setFailed(error.message)
