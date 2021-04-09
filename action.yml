@@ -14,7 +14,22 @@ inputs:
     required: false
     description: "When `dryRun: true` the Github democrat won't merge any pull requests"
     default: false
-
+  prMinimumReviewScore:
+    required: false
+    description: The minimum pull request review score needed to be eligible for merge (approves +1, request changes -1)
+    default: 1
+  prMaturity:
+    required: false
+    description: The delay (in hours) needed before a pull request is eligible for merge
+    default: 24
+  prMarkAsMegeableLabel:
+    required: false
+    description: The pull request label needed to be eligible for merge
+    default: ready
+  prTargetBranch:
+    required: false
+    description: The pull request target branch
+    default: main
 runs:
   using: node12
   main: dist/index.js

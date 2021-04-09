@@ -2,12 +2,21 @@ import * as github from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
 import { Endpoints } from '@octokit/types'
 
+type logFunction = (level: string, message: string) => void
+
 export interface DemocratParameters {
   readonly token: string
   readonly owner: string
   readonly repo: string
-  readonly dryRun?: boolean
-  readonly logFunction?: (level: string, message: string) => void
+  readonly dryRun: boolean
+  readonly logFunction: logFunction
+}
+
+export interface PullRequestParameters {
+  readonly minimumReviewScore: number
+  readonly maturity: number
+  readonly markAsMergeableLabel: string
+  readonly targetBranch: string
 }
 
 interface PullCandidate {
@@ -25,15 +34,17 @@ type listReviewsData = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}/
 
 export default class Democrat {
   private democratParameters: DemocratParameters
+  private pullRequestParameters: PullRequestParameters
   private octokit: InstanceType<typeof GitHub>
-  private logger: (level: string, message: string) => void
+  private logger: logFunction
 
-  constructor(democratParameters: DemocratParameters) {
+  constructor(democratParameters: DemocratParameters, pullRequestParameters: PullRequestParameters) {
     this.democratParameters = democratParameters
-    this.octokit = github.getOctokit(democratParameters.token)
+    this.pullRequestParameters = pullRequestParameters
     /* eslint-disable no-console */
     this.logger = democratParameters.logFunction || ((level, message) => console.log(`${level} - ${message}`))
     /* eslint-enable no-console */
+    this.octokit = github.getOctokit(democratParameters.token)
   }
 
   async enforceDemocracy(): Promise<void> {
@@ -44,7 +55,17 @@ export default class Democrat {
     this.logger('info', `${pulls.length} pull request(s) is/are candidate(s) for merge.`)
     const pullsAndReviews = await this.fetchPullDetailsAndReviews(pulls)
     const pullCandidates = this.buildPullCandidates(pullsAndReviews)
-    const electedPullCandidates = pullCandidates.filter(this.validatePullCandidate)
+    const electedPullCandidates = pullCandidates.filter((pull) => {
+      const errors = this.validatePullCandidate(pull)
+
+      if (errors.length > 0) {
+        this.logger('info', `Pull request #${pull.number} did not pass validation. Errors: ${errors.join(', ')}.`)
+
+        return false
+      }
+
+      return true
+    })
     this.logger('info', `${electedPullCandidates.length} pull request(s) left after validation.`)
 
     await this.mergePulls(electedPullCandidates)
@@ -138,14 +159,21 @@ export default class Democrat {
     }
   }
 
-  private validatePullCandidate = (pullCandidate: PullCandidate): boolean => {
-    return (
-      pullCandidate.mergeable &&
-      pullCandidate.reviewScore >= 1 &&
-      (+new Date() - pullCandidate.updatedAt.getTime()) / (1000 * 60 * 60) > 24 &&
-      -1 !== pullCandidate.labels.indexOf('ready') &&
-      'main' === pullCandidate.base
-    )
+  private validatePullCandidate(pullCandidate: PullCandidate): string[] {
+    const errors = []
+    const { minimumReviewScore, maturity, markAsMergeableLabel, targetBranch } = this.pullRequestParameters
+    const lastCommitSinceHours = (+new Date() - pullCandidate.updatedAt.getTime()) / (1000 * 60 * 60)
+    const hasMergeableLabel = -1 !== pullCandidate.labels.indexOf(markAsMergeableLabel)
+
+    pullCandidate.mergeable || errors.push('not mergeable')
+    pullCandidate.reviewScore >= minimumReviewScore || errors.push(`review score too low: ${pullCandidate.reviewScore}`)
+    lastCommitSinceHours > maturity ||
+      errors.push(`not mature enough (last commit ${lastCommitSinceHours.toPrecision(1)}h ago)`)
+    hasMergeableLabel || errors.push(`missing \`${markAsMergeableLabel}\` label`)
+    targetBranch === pullCandidate.base ||
+      errors.push(`wrong target branch: ${pullCandidate.base} instead of ${targetBranch}`)
+
+    return errors
   }
 
   private async mergePulls(pulls: PullCandidate[]): Promise<void[]> {

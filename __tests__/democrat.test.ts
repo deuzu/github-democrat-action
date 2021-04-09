@@ -35,7 +35,14 @@ describe('Democrat', () => {
   })
 
   test('Enforce democracy', async () => {
-    const democrat = new Democrat({ token: '12345', owner: 'org', repo: 'repo', dryRun: false, logFunction: () => {} })
+    const democratParameters = { token: '12345abc', owner: 'org', repo: 'repo', dryRun: false, logFunction: () => {} }
+    const pullRequestParameters = {
+      minimumReviewScore: 1,
+      maturity: 24,
+      markAsMergeableLabel: 'ready',
+      targetBranch: 'main',
+    }
+    const democrat = new Democrat(democratParameters, pullRequestParameters)
     await democrat.enforceDemocracy()
 
     expect(pullListMock).toHaveBeenCalledTimes(1)
@@ -45,7 +52,14 @@ describe('Democrat', () => {
   })
 
   test('Enforce democracy - DryRun', async () => {
-    const democrat = new Democrat({ token: '12345', owner: 'org', repo: 'repo', dryRun: true, logFunction: () => {} })
+    const democratParameters = { token: '12345abc', owner: 'org', repo: 'repo', dryRun: true, logFunction: () => {} }
+    const pullRequestParameters = {
+      minimumReviewScore: 1,
+      maturity: 24,
+      markAsMergeableLabel: 'ready',
+      targetBranch: 'main',
+    }
+    const democrat = new Democrat(democratParameters, pullRequestParameters)
     await democrat.enforceDemocracy()
 
     expect(pullListMock).toHaveBeenCalledTimes(1)

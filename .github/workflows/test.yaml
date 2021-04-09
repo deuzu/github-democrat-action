@@ -26,4 +26,11 @@ jobs:
       - uses: ./
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           dryRun: true
+          prMinimumReviewScore: 1
+          prMaturity: 24
+          prMarkAsMegeableLabel: ready
+          prTargetBranch: main
