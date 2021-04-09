@@ -7,9 +7,7 @@ export interface DemocratParameters {
   readonly owner: string
   readonly repo: string
   readonly dryRun?: boolean
-  /* eslint-disable @typescript-eslint/no-unused-vars */
   readonly logFunction?: (level: string, message: string) => void
-  /* eslint-enable @typescript-eslint/no-unused-vars */
 }
 
 interface PullCandidate {
@@ -28,9 +26,7 @@ type listReviewsData = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}/
 export default class Democrat {
   private democratParameters: DemocratParameters
   private octokit: InstanceType<typeof GitHub>
-  /* eslint-disable @typescript-eslint/no-unused-vars */
   private logger: (level: string, message: string) => void
-  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   constructor(democratParameters: DemocratParameters) {
     this.democratParameters = democratParameters
