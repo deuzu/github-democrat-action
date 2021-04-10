@@ -18,9 +18,9 @@ inputs:
     required: false
     description: The minimum pull request review score needed to be eligible for merge (approves +1, request changes -1)
     default: 1
-  prMaturity:
+  prVotingTimeHours:
     required: false
-    description: The delay (in hours) needed before a pull request is eligible for merge
+    description: The delay (in hours and since the last commit) needed before a pull request is eligible for merge
     default: 24
   prMarkAsMegeableLabel:
     required: false

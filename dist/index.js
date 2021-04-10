@@ -145,12 +145,12 @@ class Democrat {
     }
     validatePullCandidate(pullCandidate) {
         const errors = [];
-        const { minimumReviewScore, maturity, markAsMergeableLabel, targetBranch } = this.pullRequestParameters;
+        const { minimumReviewScore, votingTimeHours, markAsMergeableLabel, targetBranch } = this.pullRequestParameters;
         const lastCommitSinceHours = (+new Date() - pullCandidate.updatedAt.getTime()) / (1000 * 60 * 60);
         const hasMergeableLabel = -1 !== pullCandidate.labels.indexOf(markAsMergeableLabel);
         pullCandidate.mergeable || errors.push('not mergeable');
         pullCandidate.reviewScore >= minimumReviewScore || errors.push(`review score too low: ${pullCandidate.reviewScore}`);
-        lastCommitSinceHours > maturity ||
+        lastCommitSinceHours > votingTimeHours ||
             errors.push(`not mature enough (last commit ${lastCommitSinceHours.toPrecision(1)}h ago)`);
         hasMergeableLabel || errors.push(`missing \`${markAsMergeableLabel}\` label`);
         targetBranch === pullCandidate.base ||
@@ -248,7 +248,7 @@ function run() {
             };
             const pullRequestParameters = {
                 minimumReviewScore: parseInt(core.getInput('prMinimumReviewScore') || process.env.PR_MINIMUM_REVIEW_SCORE || ''),
-                maturity: parseInt(core.getInput('prMaturity') || process.env.PR_MATURITY || ''),
+                votingTimeHours: parseInt(core.getInput('prVotingTimeHours') || process.env.PR_VOTING_TIME_HOURS || ''),
                 markAsMergeableLabel: core.getInput('prMarkAsMegeableLabel') || process.env.PR_MARK_AS_MERGEABLE_LABEL || '',
                 targetBranch: core.getInput('prTargetBranch') || process.env.PR_TARGET_BRANCH || '',
             };

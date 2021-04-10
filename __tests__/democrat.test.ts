@@ -38,7 +38,7 @@ describe('Democrat', () => {
     const democratParameters = { token: '12345abc', owner: 'org', repo: 'repo', dryRun: false, logFunction: () => {} }
     const pullRequestParameters = {
       minimumReviewScore: 1,
-      maturity: 24,
+      votingTimeHours: 24,
       markAsMergeableLabel: 'ready',
       targetBranch: 'main',
     }
@@ -55,7 +55,7 @@ describe('Democrat', () => {
     const democratParameters = { token: '12345abc', owner: 'org', repo: 'repo', dryRun: true, logFunction: () => {} }
     const pullRequestParameters = {
       minimumReviewScore: 1,
-      maturity: 24,
+      votingTimeHours: 24,
       markAsMergeableLabel: 'ready',
       targetBranch: 'main',
     }
