@@ -8,6 +8,7 @@ export interface DemocratParameters {
   readonly token: string
   readonly owner: string
   readonly repo: string
+  readonly voters: string[]
   readonly dryRun: boolean
   readonly logFunction: logFunction
 }
@@ -139,6 +140,8 @@ export default class Democrat {
   }
 
   private buildPullCandidate(pull: getPullData, reviews: listReviewsData): PullCandidate {
+    const { voters } = this.democratParameters
+
     return {
       number: pull.number,
       mergeable: !!pull.mergeable,
@@ -146,6 +149,10 @@ export default class Democrat {
       labels: pull.labels.map((label) => label.name),
       base: pull.base.ref,
       reviewScore: reviews.reduce((accumulator, review): number => {
+        if (voters.length > 0 && (!review?.user?.login || -1 === voters.indexOf(review.user.login))) {
+          return accumulator
+        }
+
         if ('APPROVED' === review.state) {
           accumulator += 1
         }
