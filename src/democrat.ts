@@ -14,7 +14,7 @@ export interface DemocratParameters {
 
 export interface PullRequestParameters {
   readonly minimumReviewScore: number
-  readonly maturity: number
+  readonly votingTimeHours: number
   readonly markAsMergeableLabel: string
   readonly targetBranch: string
 }
@@ -161,13 +161,13 @@ export default class Democrat {
 
   private validatePullCandidate(pullCandidate: PullCandidate): string[] {
     const errors = []
-    const { minimumReviewScore, maturity, markAsMergeableLabel, targetBranch } = this.pullRequestParameters
+    const { minimumReviewScore, votingTimeHours, markAsMergeableLabel, targetBranch } = this.pullRequestParameters
     const lastCommitSinceHours = (+new Date() - pullCandidate.updatedAt.getTime()) / (1000 * 60 * 60)
     const hasMergeableLabel = -1 !== pullCandidate.labels.indexOf(markAsMergeableLabel)
 
     pullCandidate.mergeable || errors.push('not mergeable')
     pullCandidate.reviewScore >= minimumReviewScore || errors.push(`review score too low: ${pullCandidate.reviewScore}`)
-    lastCommitSinceHours > maturity ||
+    lastCommitSinceHours > votingTimeHours ||
       errors.push(`not mature enough (last commit ${lastCommitSinceHours.toPrecision(1)}h ago)`)
     hasMergeableLabel || errors.push(`missing \`${markAsMergeableLabel}\` label`)
     targetBranch === pullCandidate.base ||

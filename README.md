@@ -6,7 +6,7 @@
   <h3 align="center">Github Democrat Action</h3>
 
   <p align="center">
-    Enforce democracy on a repository by merging pull requests by voting score.
+    Enforce democracy on a project by allowing a community to vote for mergeable pull requests.
     <br />
     <a href="https://github.com/deuzu/github-democrat-action/"><strong>Explore the docs »</strong></a>
     <br />
@@ -32,6 +32,22 @@
 * [Acknowledgements](#acknowledgements)
 
 ## About The Project
+
+Have you ever been frustated that your open source contribution never gets merged?
+Or that you missed a contribution on one of your project because you were not available?
+I have...
+
+Maintainers and contributors schedules are not synchronised. Manage or contribute to open source takes time.
+Open source management and contribution are often done on your free time, and you want it as smooth as possible.
+And you want the open source community to be as open as it should.
+
+That's when I knew open source community needed democracy!
+GNU defines a "free software" so that we can run, study, redistribute and distrubute modified copies.
+What if , as an open source enthousiasts, you could vote to express your opinion on a project?
+
+The Github Democrat brings democracy to a project.
+It gives contributors and non-contributors another way to participate by voting.
+The world is more than ever in the need of strong democracy enthousiasts. And so is the open source community.
 
 ### Built With
 
@@ -62,7 +78,7 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }} # GitHub automatically creates the GITHUB_TOKEN secret
           # dryRun: true
           # prMinimumReviewScore: 1
-          # prMaturity: 24
+          # prVotingTimeHours: 24
           # prMarkAsMegeableLabel: ready
           # prTargetBranch: main
 ```
