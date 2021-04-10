@@ -136,7 +136,7 @@ class Democrat {
                 if ('APPROVED' === review.state) {
                     accumulator += 1;
                 }
-                if ('REQUEST_CHANGE' === review.state) {
+                if ('CHANGES_REQUESTED' === review.state) {
                     accumulator += -1;
                 }
                 return accumulator;
