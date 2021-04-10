@@ -67,7 +67,7 @@ jobs:
           # prTargetBranch: main
 ```
 
-Cf. [./action.yaml](./action.yaml) for action inputs.
+Cf. [./action.yml](./action.yml) for action inputs.
 
 The job will look for open pull requests and merge ones that satisfy the following constraints (configurable):
 - receive more than half of the majority vote cast (votes are review approves and request changes)
