@@ -16,7 +16,12 @@ describe('Democrat', () => {
     },
   }))
   const pullListReviewsMock = jest.fn(() => ({
-    data: [{ state: 'APPROVED' }, { state: 'APPROVED' }, { state: 'REQUEST_CHANGE' }],
+    data: [
+      { user: { login: 'deuzu' }, state: 'APPROVED' },
+      { user: { login: 'contributor' }, state: 'APPROVED' },
+      { user: { login: 'angry_contributor' }, state: 'CHANGES_REQUESTED' },
+      { user: { login: 'non_approved_contributor' }, state: 'CHANGES_REQUESTED' },
+    ],
   }))
   const pullMergeMock = jest.fn()
 
@@ -35,7 +40,14 @@ describe('Democrat', () => {
   })
 
   test('Enforce democracy', async () => {
-    const democratParameters = { token: '12345abc', owner: 'org', repo: 'repo', dryRun: false, logFunction: () => {} }
+    const democratParameters = {
+      token: '12345abc',
+      owner: 'org',
+      repo: 'repo',
+      voters: ['deuzu', 'contributor', 'angry_contributor'],
+      dryRun: false,
+      logFunction: () => {},
+    }
     const pullRequestParameters = {
       minimumReviewScore: 1,
       votingTimeHours: 24,
@@ -52,7 +64,14 @@ describe('Democrat', () => {
   })
 
   test('Enforce democracy - DryRun', async () => {
-    const democratParameters = { token: '12345abc', owner: 'org', repo: 'repo', dryRun: true, logFunction: () => {} }
+    const democratParameters = {
+      token: '12345abc',
+      owner: 'org',
+      repo: 'repo',
+      voters: ['deuzu', 'contributor', 'angry_contributor'],
+      dryRun: true,
+      logFunction: () => {},
+    }
     const pullRequestParameters = {
       minimumReviewScore: 1,
       votingTimeHours: 24,

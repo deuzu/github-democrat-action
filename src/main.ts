@@ -9,11 +9,17 @@ async function run(): Promise<void> {
   try {
     const context = github.context
     const [owner, repo] = (context.payload.repository?.full_name || process.env.GITHUB_REPOSITORY || '/').split('/')
+    const voters = core
+      .getInput('voter')
+      .split(',')
+      .map((voter: string): string => voter.trim())
+      .filter((voter: string): boolean => !!voter)
 
     const democratParameters: DemocratParameters = {
       token: core.getInput('githubToken') || process.env.GITHUB_TOKEN || '',
       owner,
       repo,
+      voters,
       dryRun: (core.getInput('dryRun') || process.env.DRY_RUN) === 'true',
       logFunction: (level: string, message: string) => {
         /* eslint-disable @typescript-eslint/no-explicit-any */

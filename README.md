@@ -77,6 +77,7 @@ jobs:
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }} # GitHub automatically creates the GITHUB_TOKEN secret
           # dryRun: true
+          # voters: deuzu, not-deuzu
           # prMinimumReviewScore: 1
           # prVotingTimeHours: 24
           # prMarkAsMegeableLabel: ready

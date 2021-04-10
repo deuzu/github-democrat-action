@@ -126,6 +126,7 @@ class Democrat {
         return pullCandidates;
     }
     buildPullCandidate(pull, reviews) {
+        const { voters } = this.democratParameters;
         return {
             number: pull.number,
             mergeable: !!pull.mergeable,
@@ -133,6 +134,10 @@ class Democrat {
             labels: pull.labels.map((label) => label.name),
             base: pull.base.ref,
             reviewScore: reviews.reduce((accumulator, review) => {
+                var _a;
+                if (voters.length > 0 && (!((_a = review === null || review === void 0 ? void 0 : review.user) === null || _a === void 0 ? void 0 : _a.login) || -1 === voters.indexOf(review.user.login))) {
+                    return accumulator;
+                }
                 if ('APPROVED' === review.state) {
                     accumulator += 1;
                 }
@@ -234,10 +239,16 @@ function run() {
         try {
             const context = github.context;
             const [owner, repo] = (((_a = context.payload.repository) === null || _a === void 0 ? void 0 : _a.full_name) || process.env.GITHUB_REPOSITORY || '/').split('/');
+            const voters = core
+                .getInput('voter')
+                .split(',')
+                .map((voter) => voter.trim())
+                .filter((voter) => !!voter);
             const democratParameters = {
                 token: core.getInput('githubToken') || process.env.GITHUB_TOKEN || '',
                 owner,
                 repo,
+                voters,
                 dryRun: (core.getInput('dryRun') || process.env.DRY_RUN) === 'true',
                 logFunction: (level, message) => {
                     /* eslint-disable @typescript-eslint/no-explicit-any */
