@@ -8,9 +8,13 @@ dotenv.config()
 async function run(): Promise<void> {
   try {
     const context = github.context
+    const {
+      eventName,
+      payload: { action, number },
+    } = context
     const [owner, repo] = (context.payload.repository?.full_name || process.env.GITHUB_REPOSITORY || '/').split('/')
     const voters = core
-      .getInput('voter')
+      .getInput('voters')
       .split(',')
       .map((voter: string): string => voter.trim())
       .filter((voter: string): boolean => !!voter)
@@ -37,6 +41,13 @@ async function run(): Promise<void> {
     }
 
     const democrat = new Democrat(democratParameters, pullRequestParameters)
+
+    if ('pull_request' === eventName && 'opened' === action) {
+      await democrat.votingOpening(number)
+
+      return
+    }
+
     await democrat.enforceDemocracy()
   } catch (error) {
     core.setFailed(error.message)

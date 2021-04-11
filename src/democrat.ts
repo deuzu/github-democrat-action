@@ -48,6 +48,40 @@ export default class Democrat {
     this.octokit = github.getOctokit(democratParameters.token)
   }
 
+  async votingOpening(pullNumber: number): Promise<void> {
+    const { owner, repo, voters, dryRun } = this.democratParameters
+    const { targetBranch, markAsMergeableLabel, votingTimeHours, minimumReviewScore } = this.pullRequestParameters
+    const votersLink = voters.map((voter) => `[${voter}](https://github.com/${voter})`)
+    const body = `
+## The Github Democrat is now taking care of this pull request. Voting is open!
+
+To be eligible for merge, the pull request must:
+- be mergeable (no conflicts)
+- target the branch \`${targetBranch}\`
+- have a \`${markAsMergeableLabel}\` label
+- have been unmodified for \`${votingTimeHours}h\`
+- have a review score of \`${minimumReviewScore}\` or more (approves +1 & request changes -1)
+
+Allowed voters are: ${voters.length > 0 ? votersLink.join(', ') : ':open_hands: everyone :open_hands:'}
+    `
+
+    if (dryRun) {
+      this.logger(
+        'info',
+        `Dry-run enabled. The following comment will not be created one the pull request #${pullNumber}: ${body}`
+      )
+
+      return
+    }
+
+    this.octokit.issues.createComment({
+      owner,
+      repo,
+      issue_number: pullNumber,
+      body,
+    })
+  }
+
   async enforceDemocracy(): Promise<void> {
     const { owner, repo } = this.democratParameters
     this.logger('info', `Implementing democracy on ${owner}/${repo}, resistance is futile.`)
@@ -199,6 +233,7 @@ export default class Democrat {
       return new Promise((resolve) => resolve(undefined))
     }
 
+    await this.commentMergePull(pull)
     await this.octokit.pulls.merge({
       owner,
       repo,
@@ -207,5 +242,17 @@ export default class Democrat {
     })
 
     return this.logger('info', `Pull Request #${pull.number} merged.`)
+  }
+
+  private async commentMergePull(pull: PullCandidate): Promise<void> {
+    const { owner, repo } = this.democratParameters
+    const body = `Democracy has spoken, the pull request will be merged.`
+
+    this.octokit.issues.createComment({
+      owner,
+      repo,
+      issue_number: pull.number,
+      body,
+    })
   }
 }

@@ -46,6 +46,35 @@ class Democrat {
         /* eslint-enable no-console */
         this.octokit = github.getOctokit(democratParameters.token);
     }
+    votingOpening(pullNumber) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo, voters, dryRun } = this.democratParameters;
+            const { targetBranch, markAsMergeableLabel, votingTimeHours, minimumReviewScore } = this.pullRequestParameters;
+            const votersLink = voters.map((voter) => `[${voter}](https://github.com/${voter})`);
+            const body = `
+## The Github Democrat is now taking care of this pull request. Voting is open!
+
+To be eligible for merge, the pull request must:
+- be mergeable (no conflicts)
+- target the branch \`${targetBranch}\`
+- have a \`${markAsMergeableLabel}\` label
+- have been unmodified for \`${votingTimeHours}h\`
+- have a review score of \`${minimumReviewScore}\` or more (approves +1 & request changes -1)
+
+Allowed voters are: ${voters.length > 0 ? votersLink.join(', ') : ':open_hands: everyone :open_hands:'}
+    `;
+            if (dryRun) {
+                this.logger('info', `Dry-run enabled. The following comment will not be created one the pull request #${pullNumber}: ${body}`);
+                return;
+            }
+            this.octokit.issues.createComment({
+                owner,
+                repo,
+                issue_number: pullNumber,
+                body,
+            });
+        });
+    }
     enforceDemocracy() {
         return __awaiter(this, void 0, void 0, function* () {
             const { owner, repo } = this.democratParameters;
@@ -176,6 +205,7 @@ class Democrat {
                 this.logger('info', `Dry-run enabled. Pull Request #${pull.number} will not be merged.`);
                 return new Promise((resolve) => resolve(undefined));
             }
+            yield this.commentMergePull(pull);
             yield this.octokit.pulls.merge({
                 owner,
                 repo,
@@ -183,6 +213,18 @@ class Democrat {
                 merge_method: 'squash',
             });
             return this.logger('info', `Pull Request #${pull.number} merged.`);
+        });
+    }
+    commentMergePull(pull) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = this.democratParameters;
+            const body = `Democracy has spoken, the pull request will be merged.`;
+            this.octokit.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull.number,
+                body,
+            });
         });
     }
 }
@@ -238,9 +280,10 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const context = github.context;
+            const { eventName, payload: { action, number }, } = context;
             const [owner, repo] = (((_a = context.payload.repository) === null || _a === void 0 ? void 0 : _a.full_name) || process.env.GITHUB_REPOSITORY || '/').split('/');
             const voters = core
-                .getInput('voter')
+                .getInput('voters')
                 .split(',')
                 .map((voter) => voter.trim())
                 .filter((voter) => !!voter);
@@ -264,6 +307,10 @@ function run() {
                 targetBranch: core.getInput('prTargetBranch') || process.env.PR_TARGET_BRANCH || '',
             };
             const democrat = new democrat_1.default(democratParameters, pullRequestParameters);
+            if ('pull_request' === eventName && 'opened' === action) {
+                yield democrat.votingOpening(number);
+                return;
+            }
             yield democrat.enforceDemocracy();
         }
         catch (error) {
