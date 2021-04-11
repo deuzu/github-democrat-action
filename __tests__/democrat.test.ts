@@ -24,6 +24,7 @@ describe('Democrat', () => {
     ],
   }))
   const pullMergeMock = jest.fn()
+  const pullMergeCommentMock = jest.fn()
 
   const octokitMock: any = mocked(getOctokit, true)
   octokitMock.mockImplementation(() => ({
@@ -32,6 +33,9 @@ describe('Democrat', () => {
       get: pullGetMock,
       listReviews: pullListReviewsMock,
       merge: pullMergeMock,
+    },
+    issues: {
+      createComment: pullMergeCommentMock,
     },
   }))
 
@@ -60,6 +64,7 @@ describe('Democrat', () => {
     expect(pullListMock).toHaveBeenCalledTimes(1)
     expect(pullGetMock).toHaveBeenCalledTimes(1)
     expect(pullListReviewsMock).toHaveBeenCalledTimes(1)
+    expect(pullMergeCommentMock).toHaveBeenCalledTimes(1)
     expect(pullMergeMock).toHaveBeenCalledTimes(1)
   })
 
@@ -84,6 +89,7 @@ describe('Democrat', () => {
     expect(pullListMock).toHaveBeenCalledTimes(1)
     expect(pullGetMock).toHaveBeenCalledTimes(1)
     expect(pullListReviewsMock).toHaveBeenCalledTimes(1)
+    expect(pullMergeCommentMock).toHaveBeenCalledTimes(0)
     expect(pullMergeMock).toHaveBeenCalledTimes(0)
   })
 })

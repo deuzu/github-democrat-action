@@ -15,22 +15,23 @@ jobs:
       - run: npm run format-check
       - run: npm run lint
       - run: npm run test
-      - run: npm run build
-      - run: npm run package
   action:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: npm install
-      - run: npm run all
-      - uses: ./
-        with:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm run build
+      - run: npm run package
       - uses: ./
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           dryRun: true
+      - uses: ./
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          voters: deuzu
+          dryRun: true
           prMinimumReviewScore: 1
-          prMaturity: 24
+          prVotingTimeHours: 24
           prMarkAsMegeableLabel: ready
           prTargetBranch: main

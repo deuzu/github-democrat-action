@@ -66,7 +66,10 @@ name: 'democracy-enforcer'
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/30 * * * *' # checks pull requests to merge every 30 minutes
+  pull_request:
+    types:
+      - opened # for a voting opening message on a pull request
 
 jobs:
   enforce-democracy:
