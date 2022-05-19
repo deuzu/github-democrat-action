@@ -27,9 +27,9 @@
   "author": "deuzu",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.7.0",
+    "@actions/core": "^1.8.2",
     "@actions/github": "^4.0.0",
-    "dotenv": "^10.0.0"
+    "dotenv": "^16.0.1"
   },
   "devDependencies": {
     "@octokit/types": "^6.34.0",
