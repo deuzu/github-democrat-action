@@ -1,6 +1,6 @@
 import * as github from '@actions/github'
+import * as octokit from '@octokit/types'
 import { GitHub } from '@actions/github/lib/utils'
-import { Endpoints } from '@octokit/types'
 
 type logFunction = (level: string, message: string) => void
 
@@ -29,9 +29,9 @@ interface PullCandidate {
   readonly reviewScore: number
 }
 
-type listPullsData = Endpoints['GET /repos/{owner}/{repo}/pulls']['response']['data']
-type getPullData = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data']
-type listReviewsData = Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews']['response']['data']
+type listPullsData = octokit.Endpoints['GET /repos/{owner}/{repo}/pulls']['response']['data']
+type getPullData = octokit.Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data']
+type listReviewsData = octokit.Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews']['response']['data']
 
 export default class Democrat {
   private democratParameters: DemocratParameters

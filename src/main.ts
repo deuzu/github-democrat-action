@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import dotenv from 'dotenv'
 import Democrat, { DemocratParameters, PullRequestParameters } from './democrat'
+import dotenv from 'dotenv'
 
 dotenv.config()
 
