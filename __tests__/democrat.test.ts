@@ -28,14 +28,16 @@ describe('Democrat', () => {
 
   const octokitMock: any = mocked(getOctokit, true)
   octokitMock.mockImplementation(() => ({
-    pulls: {
-      list: pullListMock,
-      get: pullGetMock,
-      listReviews: pullListReviewsMock,
-      merge: pullMergeMock,
-    },
-    issues: {
-      createComment: pullMergeCommentMock,
+    rest: {
+      pulls: {
+        list: pullListMock,
+        get: pullGetMock,
+        listReviews: pullListReviewsMock,
+        merge: pullMergeMock,
+      },
+      issues: {
+        createComment: pullMergeCommentMock,
+      },
     },
   }))
 

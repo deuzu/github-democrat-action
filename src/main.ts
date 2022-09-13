@@ -50,7 +50,13 @@ async function run(): Promise<void> {
 
     await democrat.enforceDemocracy()
   } catch (error) {
-    core.setFailed(error.message)
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+    }
+
+    if ('string' === typeof error) {
+      core.setFailed(error)
+    }
   }
 }
 

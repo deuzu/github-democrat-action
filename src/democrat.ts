@@ -74,7 +74,7 @@ Allowed voters are: ${voters.length > 0 ? votersLink.join(', ') : ':open_hands: 
       return
     }
 
-    this.octokit.issues.createComment({
+    this.octokit.rest.issues.createComment({
       owner,
       repo,
       issue_number: pullNumber,
@@ -111,7 +111,7 @@ Allowed voters are: ${voters.length > 0 ? votersLink.join(', ') : ':open_hands: 
   private async fetchPulls(): Promise<listPullsData> {
     const { owner, repo } = this.democratParameters
 
-    const response = await this.octokit.pulls.list({
+    const response = await this.octokit.rest.pulls.list({
       owner,
       repo,
       state: 'open',
@@ -142,7 +142,7 @@ Allowed voters are: ${voters.length > 0 ? votersLink.join(', ') : ':open_hands: 
   private async fetchPullDetails(pullNumber: number): Promise<getPullData> {
     const { owner, repo } = this.democratParameters
 
-    const response = await this.octokit.pulls.get({
+    const response = await this.octokit.rest.pulls.get({
       owner,
       repo,
       pull_number: pullNumber,
@@ -154,7 +154,7 @@ Allowed voters are: ${voters.length > 0 ? votersLink.join(', ') : ':open_hands: 
   private async fetchReviews(pullNumber: number): Promise<listReviewsData> {
     const { owner, repo } = this.democratParameters
 
-    const response = await this.octokit.pulls.listReviews({
+    const response = await this.octokit.rest.pulls.listReviews({
       owner,
       repo,
       pull_number: pullNumber,
@@ -234,7 +234,7 @@ Allowed voters are: ${voters.length > 0 ? votersLink.join(', ') : ':open_hands: 
     }
 
     await this.commentMergePull(pull)
-    await this.octokit.pulls.merge({
+    await this.octokit.rest.pulls.merge({
       owner,
       repo,
       pull_number: pull.number,
@@ -248,7 +248,7 @@ Allowed voters are: ${voters.length > 0 ? votersLink.join(', ') : ':open_hands: 
     const { owner, repo } = this.democratParameters
     const body = `Democracy has spoken, the pull request will be merged.`
 
-    this.octokit.issues.createComment({
+    this.octokit.rest.issues.createComment({
       owner,
       repo,
       issue_number: pull.number,
