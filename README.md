@@ -43,7 +43,7 @@ Plus, you want the open source community to be as open as it should.
 
 That's when I knew open source community needed democracy!  
 GNU defines a "free software" so that we can run, study, redistribute and distrubute modified copies.  
-What if , as an open source enthousiasts, you could vote to express your opinion on a project?  
+What if, as an open source enthousiasts, you could vote to express your opinion on a project?  
 
 The Github Democrat brings democracy to a project.  
 It gives contributors and non-contributors another way to participate by voting.  
