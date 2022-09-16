@@ -32,7 +32,7 @@
     "dotenv": "^16.0.2"
   },
   "devDependencies": {
-    "@octokit/types": "^7.4.0",
+    "@octokit/types": "^7.5.0",
     "@types/jest": "^27.5.2",
     "@types/node": "^18.7.18",
     "@typescript-eslint/parser": "^5.37.0",
