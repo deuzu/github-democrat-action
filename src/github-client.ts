@@ -1,11 +1,8 @@
-import * as octokit from '@octokit/types'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
 import { GithubClientInterface, PullRequest } from './types'
 
 type Ocktokit = InstanceType<typeof GitHub>
-type getPullData = octokit.Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}']['response']['data']
-type listReviewsData = octokit.Endpoints['GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews']['response']['data']
 
 export default class GithubClient implements GithubClientInterface {
   private githubClient: Ocktokit
@@ -41,7 +38,7 @@ export default class GithubClient implements GithubClientInterface {
     const promises: Promise<PullRequest>[] = openPullRequests.map(
       async ({ number: pullRequestNumber }) =>
         new Promise(async (resolve, reject) => {
-          const detailsPromise: Promise<getPullData> = this.githubClient.rest.pulls
+          const detailsPromise = this.githubClient.rest.pulls
             .get({
               owner: this.owner,
               repo: this.repo,
@@ -49,7 +46,7 @@ export default class GithubClient implements GithubClientInterface {
             })
             .then((response) => response.data)
 
-          const reviewsPromise: Promise<listReviewsData> = this.githubClient.rest.pulls
+          const reviewsPromise = this.githubClient.rest.pulls
             .listReviews({
               owner: this.owner,
               repo: this.repo,
