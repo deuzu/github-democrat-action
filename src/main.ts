@@ -1,46 +1,38 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import Democrat, { DemocratParameters, PullRequestParameters } from './democrat'
 import dotenv from 'dotenv'
+import Democrat from './democrat'
+import DemocratConfig from './democrat-config'
 
 dotenv.config()
 
 async function run(): Promise<void> {
   try {
-    const context = github.context
     const {
       eventName,
-      payload: { action, number },
-    } = context
-    const [owner, repo] = (context.payload.repository?.full_name || process.env.GITHUB_REPOSITORY || '/').split('/')
-    const voters = core
-      .getInput('voters')
-      .split(',')
-      .map((voter: string): string => voter.trim())
-      .filter((voter: string): boolean => !!voter)
+      payload: { action, number, repository },
+    } = github.context
 
-    const democratParameters: DemocratParameters = {
-      token: core.getInput('githubToken') || process.env.GITHUB_TOKEN || '',
-      owner,
-      repo,
-      voters,
-      dryRun: (core.getInput('dryRun') || process.env.DRY_RUN) === 'true',
-      logFunction: (level: string, message: string) => {
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        const coreUntyped = core as any
-        coreUntyped[level](message)
-        /* eslint-enable @typescript-eslint/no-explicit-any */
-      },
+    const actionLogger = (level: string, message: string): void => {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const coreUntyped = core as any
+      coreUntyped[level](message)
+      /* eslint-enable @typescript-eslint/no-explicit-any */
     }
 
-    const pullRequestParameters: PullRequestParameters = {
-      minimumReviewScore: parseInt(core.getInput('prMinimumReviewScore') || process.env.PR_MINIMUM_REVIEW_SCORE || ''),
-      votingTimeHours: parseInt(core.getInput('prVotingTimeHours') || process.env.PR_VOTING_TIME_HOURS || ''),
-      markAsMergeableLabel: core.getInput('prMarkAsMegeableLabel') || process.env.PR_MARK_AS_MERGEABLE_LABEL || '',
-      targetBranch: core.getInput('prTargetBranch') || process.env.PR_TARGET_BRANCH || '',
-    }
+    const democratConfig = new DemocratConfig(
+      core.getInput('githubToken') ? core.getInput('githubToken') : undefined,
+      repository?.full_name,
+      core.getInput('voters') ? core.getInput('voters') : undefined,
+      core.getInput('dryRun') === 'true' || core.getInput('dryRun') === '1' ? true : undefined,
+      core.getInput('prMinimumReviewScore') ? parseInt(core.getInput('prMinimumReviewScore')) : undefined,
+      core.getInput('prVotingTimeHours') ? parseInt(core.getInput('prVotingTimeHours')) : undefined,
+      core.getInput('prMarkAsMergeableLabel') ? core.getInput('prMarkAsMergeableLabel') : undefined,
+      core.getInput('prTargetBranch') ? core.getInput('prTargetBranch') : undefined,
+      core.getInput('githubToken') ? actionLogger : undefined
+    )
 
-    const democrat = new Democrat(democratParameters, pullRequestParameters)
+    const democrat = new Democrat(democratConfig)
 
     if ('pull_request' === eventName && 'opened' === action) {
       await democrat.votingOpening(number)

@@ -1,12 +1,14 @@
 {
     "plugins": ["jest", "@typescript-eslint"],
-    "extends": ["plugin:github/recommended"],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
       "ecmaVersion": 9,
       "sourceType": "module",
       "project": "./tsconfig.json"
     },
+    "ignorePatterns": [
+      "**/*.test.ts"
+    ],
     "rules": {
       "camelcase": "off",
       "eslint-comments/no-use": "off",

@@ -79,8 +79,8 @@ jobs:
       - uses: deuzu/github-democrat-action
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }} # GitHub automatically creates the GITHUB_TOKEN secret
+          voters: deuzu, not-deuzu
           # dryRun: true
-          # voters: deuzu, not-deuzu
           # prMinimumReviewScore: 1
           # prVotingTimeHours: 24
           # prMarkAsMegeableLabel: ready

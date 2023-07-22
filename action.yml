@@ -11,8 +11,8 @@ inputs:
     required: true
     description: The Github token that give permission on the repository.
   voters:
-    required: false
-    description: The Github usernames (separated by coma) of allowed voters. /!\ Not specifying any voters allows every Github user to vote /!\
+    required: true
+    description: The Github usernames (separated by coma) of allowed voters.
   dryRun:
     required: false
     description: "When `dryRun: true` the Github democrat won't merge any pull requests"
@@ -33,6 +33,7 @@ inputs:
     required: false
     description: The pull request target branch
     default: main
+
 runs:
   using: node12
   main: dist/index.js
